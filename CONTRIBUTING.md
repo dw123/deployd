@@ -218,3 +218,68 @@ git branch -D my-fix-branch
 # Update your master with the latest upstream version:
 git pull --ff upstream master
 ```
+
+## Maintainers Rebase Guide
+
+To keep a flat and readable code history and revert easier, we rebase pull requests instead of merging them. It means that we can't use the github merge feature.
+
+1. Make a [fork of deployd](https://github.com/deployd/deployd/fork) (or use the one you probably already have and make sure it's even with Deployd)
+
+2. Set the main Deployd repo as upstream remote
+
+  ````shell
+  git remote add upstream git@github.com:deployd/deployd.git
+  ````
+
+3. Fetch the pull request you want to rebase
+
+  ````shell
+  git fetch upstream pull/${PR}/head:${BRANCH}
+  ````
+  $PR is the ID of the PR and $branch is the name of the temporary branch you'll use for that (ie. ```git fetch upstream pull/440/head:pr-440```)
+
+4. Checkout this new branch
+
+  ````shell
+  git checkout ${BRANCH}
+  ````
+
+5. Do the rebase
+
+  ````shell
+  git fetch upstream master
+  git rebase upstream/master
+  ````
+
+6. If the PR contains multiple commits, squash them
+
+  ````shell
+  git rebase -i HEAD~${COMMIT_NUMBER}
+  ````
+  ${COMMIT_NUMBER} being the number of commits you want to squash (ex: ```git rebase -i HEAD~2``` to squash 2 commits)
+
+7. Verify that the commit message follows the guidelines, if not, amend it
+
+  ````shell
+  git commit --amend -m "Fix(collection): add check for id"
+  ````
+
+8. Run the tests
+
+  ````shell
+  npm test
+  ````
+
+9. Push to upstream
+
+  ````shell
+  git push upstream ${BRANCH}:master
+  ````
+  ie: ```git push upstream pr-440:master```
+
+10. Close the PR with the message
+
+  ````shell
+  Thanks for your contribution!
+  Landed as ${COMMIT_SHA}
+  ````
